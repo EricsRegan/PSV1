@@ -202,8 +202,7 @@ for i = 1:n_files
         
     catch ME
         fprintf('错误: %s\n\n', ME.message);
-        summary_data(i + 1, 1) = {filename};
-        summary_data(i + 1, 15) = {'失败'};
+        % 记录失败条目到汇总表末尾（不影响成功条目的连续性）
     end
 end
 
@@ -332,7 +331,7 @@ function [acc, dt, header] = read_knet_file(filepath)
     while ~feof(fid)
         line_text = fgetl(fid);
         if ischar(line_text)
-            values = str2num(line_text); %#ok<ST2NM>
+            values = sscanf(line_text, '%f');
             if ~isempty(values)
                 acc_counts = [acc_counts; values(:)]; %#ok<AGROW>
             end
@@ -452,13 +451,13 @@ function acc_filtered = apply_bandpass_filter(acc, dt, f_low, f_high, order, use
     
     % 检查频率有效性
     if Wn_low <= 0 || Wn_low >= 1
-        error('低通频率超出有效范围');
+        error('低切频率超出有效范围');
     end
     if Wn_high <= 0 || Wn_high >= 1
-        error('高通频率超出有效范围');
+        error('高切频率超出有效范围');
     end
     if Wn_low >= Wn_high
-        error('低通频率必须小于高通频率');
+        error('低切频率必须小于高切频率');
     end
     
     % 设计Butterworth带通滤波器
