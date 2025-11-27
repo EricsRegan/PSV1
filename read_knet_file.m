@@ -71,8 +71,8 @@ function [acc, dt, header] = read_knet_file(filename)
     while ~feof(fid)
         line = fgetl(fid);
         if ischar(line)
-            % 解析每行的数值
-            values = str2num(line); %#ok<ST2NM>
+            % 使用sscanf安全解析数值（避免str2num的安全风险）
+            values = sscanf(line, '%f');
             acc_counts = [acc_counts; values(:)]; %#ok<AGROW>
         end
     end

@@ -39,8 +39,8 @@ function [acc, dt, header] = read_txt_file(filename)
             continue;
         end
         
-        % 尝试解析为数值
-        values = str2num(line); %#ok<ST2NM>
+        % 尝试使用sscanf安全解析数值（避免str2num的安全风险）
+        values = sscanf(line, '%f');
         
         if isempty(values)
             % 无法解析为数值，认为是表头
