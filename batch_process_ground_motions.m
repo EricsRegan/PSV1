@@ -2,9 +2,13 @@
 % 批量读取、处理多个地震动记录并输出结果
 %
 % 使用方法：
-%   1. 将所有EW格式的地震动文件放在同一文件夹
+%   1. 将地震动文件放在同一文件夹
 %   2. 运行本脚本
 %   3. 结果将保存在 'batch_results' 文件夹中
+%
+% 支持的文件格式：
+%   - 日本K-NET/KiK-net格式: *.EW, *.NS, *.UD
+%   - TXT两列格式: *.txt（第一列时间，第二列加速度）
 
 clear; clc; close all;
 
@@ -12,7 +16,7 @@ clear; clc; close all;
 config = struct();
 config.input_folder = '.';  % 输入文件夹（当前目录）
 config.output_folder = 'batch_results';  % 输出文件夹
-config.file_pattern = '*.EW';  % 文件匹配模式
+config.file_patterns = {'*.EW', '*.NS', '*.UD', '*.txt'};  % 支持多种文件格式
 
 % 处理参数（与SeismoSignal保持一致）
 config.highcut_freq = 25;        % 高通滤波频率 (Hz)
@@ -28,8 +32,13 @@ if ~exist(config.output_folder, 'dir')
     mkdir(config.output_folder);
 end
 
-%% 查找所有地震动文件
-file_list = dir(fullfile(config.input_folder, config.file_pattern));
+%% 查找所有地震动文件（支持多种格式）
+file_list = [];
+for i = 1:length(config.file_patterns)
+    pattern = config.file_patterns{i};
+    files = dir(fullfile(config.input_folder, pattern));
+    file_list = [file_list; files]; %#ok<AGROW>
+end
 n_files = length(file_list);
 
 if n_files == 0
@@ -48,9 +57,9 @@ for i = 1:n_files
     fprintf('===== 处理 [%d/%d]: %s =====\n', i, n_files, filename);
     
     try
-        % 1. 读取数据
+        % 1. 读取数据（使用统一读取函数）
         filepath = fullfile(config.input_folder, filename);
-        [acc_raw, dt, header] = read_ew_file(filepath);
+        [acc_raw, dt, header] = read_ground_motion(filepath);
         
         % 2. 处理参数设置
         options = struct();
